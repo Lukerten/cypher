@@ -4,4 +4,4 @@ rsa:
   public_key_path: "config/public_key.pem"
   private_key_path: "config/private_key.pem"
 3des:
-  key_path: "config/key.txt"
+  key: "your-3des-key-here000000"

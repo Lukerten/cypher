@@ -30,11 +30,7 @@ func New3DESCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			key, err := load3DESKey(config.TripleDES.KeyPath)
-			if err != nil {
-				fmt.Println("Error loading 3DES key:", err)
-				os.Exit(1)
-			}
+			key := []byte(config.TripleDES.Key)
 
 			text := getInputText(args)
 			encryptedText, err := tripleDESEncrypt(text, key)
@@ -56,11 +52,7 @@ func New3DESCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			key, err := load3DESKey(config.TripleDES.KeyPath)
-			if err != nil {
-				fmt.Println("Error loading 3DES key:", err)
-				os.Exit(1)
-			}
+			key := []byte(config.TripleDES.Key)
 
 			text := getInputText(args)
 			decryptedText, err := tripleDESDecrypt(text, key)
@@ -89,14 +81,6 @@ func getInputText(args []string) string {
 	return inputText.String()
 }
 
-func load3DESKey(path string) ([]byte, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read 3DES key file: %w", err)
-	}
-	return data, nil
-}
-
 func tripleDESEncrypt(text string, key []byte) (string, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
@@ -105,7 +89,7 @@ func tripleDESEncrypt(text string, key []byte) (string, error) {
 
 	plaintext := []byte(text)
 	ciphertext := make([]byte, len(plaintext))
-	stream := cipher.NewCFBEncrypter(block, key[:block.BlockSize()])
+	stream := cipher.NewCTR(block, key[:block.BlockSize()])
 	stream.XORKeyStream(ciphertext, plaintext)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
@@ -123,7 +107,7 @@ func tripleDESDecrypt(text string, key []byte) (string, error) {
 	}
 
 	plaintext := make([]byte, len(ciphertext))
-	stream := cipher.NewCFBDecrypter(block, key[:block.BlockSize()])
+	stream := cipher.NewCTR(block, key[:block.BlockSize()])
 	stream.XORKeyStream(plaintext, ciphertext)
 
 	return string(plaintext), nil

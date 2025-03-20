@@ -16,7 +16,7 @@ type Config struct {
 		PrivateKeyPath string `yaml:"private_key_path"`
 	} `yaml:"rsa"`
 	TripleDES struct {
-		KeyPath string `yaml:"key_path"`
+		Key string `yaml:"key"`
 	} `yaml:"3des"`
 }
 

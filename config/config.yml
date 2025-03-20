@@ -1,0 +1,7 @@
+substitution:
+  keys: "config/keys.yml"
+rsa:
+  public_key_path: "config/public_key.pem"
+  private_key_path: "config/private_key.pem"
+3des:
+  key_path: "config/key.txt"

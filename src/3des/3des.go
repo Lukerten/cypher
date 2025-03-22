@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/lukerten/cypher/src/config"
-
 	"github.com/spf13/cobra"
 )
 
@@ -31,9 +30,18 @@ func New3DESCommand() *cobra.Command {
 			}
 
 			key := []byte(config.TripleDES.Key)
+			iv := []byte(config.TripleDES.IV)
+			if len(key) != 24 {
+				fmt.Println("Error: Key length must be 24 bytes")
+				os.Exit(1)
+			}
+			if len(iv) != des.BlockSize {
+				fmt.Println("Error: IV length must be 8 bytes")
+				os.Exit(1)
+			}
 
 			text := getInputText(args)
-			encryptedText, err := tripleDESEncrypt(text, key)
+			encryptedText, err := tripleDESEncrypt(text, key, iv)
 			if err != nil {
 				fmt.Println("Error encrypting text:", err)
 				os.Exit(1)
@@ -53,9 +61,18 @@ func New3DESCommand() *cobra.Command {
 			}
 
 			key := []byte(config.TripleDES.Key)
+			iv := []byte(config.TripleDES.IV)
+			if len(key) != 24 {
+				fmt.Println("Error: Key length must be 24 bytes")
+				os.Exit(1)
+			}
+			if len(iv) != des.BlockSize {
+				fmt.Println("Error: IV length must be 8 bytes")
+				os.Exit(1)
+			}
 
 			text := getInputText(args)
-			decryptedText, err := tripleDESDecrypt(text, key)
+			decryptedText, err := tripleDESDecrypt(text, key, iv)
 			if err != nil {
 				fmt.Println("Error decrypting text:", err)
 				os.Exit(1)
@@ -81,7 +98,7 @@ func getInputText(args []string) string {
 	return inputText.String()
 }
 
-func tripleDESEncrypt(text string, key []byte) (string, error) {
+func tripleDESEncrypt(text string, key, iv []byte) (string, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
 		return "", fmt.Errorf("failed to create 3DES cipher: %w", err)
@@ -89,13 +106,13 @@ func tripleDESEncrypt(text string, key []byte) (string, error) {
 
 	plaintext := []byte(text)
 	ciphertext := make([]byte, len(plaintext))
-	stream := cipher.NewCTR(block, key[:block.BlockSize()])
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(ciphertext, plaintext)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func tripleDESDecrypt(text string, key []byte) (string, error) {
+func tripleDESDecrypt(text string, key, iv []byte) (string, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
 		return "", fmt.Errorf("failed to create 3DES cipher: %w", err)
@@ -107,8 +124,9 @@ func tripleDESDecrypt(text string, key []byte) (string, error) {
 	}
 
 	plaintext := make([]byte, len(ciphertext))
-	stream := cipher.NewCTR(block, key[:block.BlockSize()])
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(plaintext, ciphertext)
 
 	return string(plaintext), nil
 }
+

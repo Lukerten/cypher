@@ -17,6 +17,7 @@ type Config struct {
 	} `yaml:"rsa"`
 	TripleDES struct {
 		Key string `yaml:"key"`
+		IV  string `yaml:"iv"`
 	} `yaml:"3des"`
 }
 

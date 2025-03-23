@@ -2,6 +2,7 @@ package threedes
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/cipher"
 	"crypto/des"
 	"encoding/base64"
@@ -30,9 +31,13 @@ func tripleDESEncrypt(text string, key, iv []byte) (string, error) {
 	}
 
 	plaintext := []byte(text)
+	padding := block.BlockSize() - len(plaintext)%block.BlockSize()
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	plaintext = append(plaintext, padtext...)
+
 	ciphertext := make([]byte, len(plaintext))
-	stream := cipher.NewCTR(block, iv)
-	stream.XORKeyStream(ciphertext, plaintext)
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext, plaintext)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
@@ -49,8 +54,12 @@ func tripleDESDecrypt(text string, key, iv []byte) (string, error) {
 	}
 
 	plaintext := make([]byte, len(ciphertext))
-	stream := cipher.NewCTR(block, iv)
-	stream.XORKeyStream(plaintext, ciphertext)
+	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(plaintext, ciphertext)
+
+	// Remove padding
+	padding := int(plaintext[len(plaintext)-1])
+	plaintext = plaintext[:len(plaintext)-padding]
 
 	return string(plaintext), nil
 }
